@@ -1,0 +1,11 @@
+--BÀI HỌC & KINH NGHIỆM TỪ GAME--
+
+1. Game BlockBlast sử dụng UI Canvas (đơn giản, dễ dùng với game) thay vì dùng Sprite Renderer.
+	Set camera trong canvas -> hợp nhất góc nhìn (gán Main Camera vào Render Camera của Canvas).
+
+2. Set Background full phù hợp với nhiều tỉ lệ: Rect Transform set stretch X stretch (alt+shift+..).
+
+3. Sử dụng Sprite Editor để cắt những thành phần Image không nền.
+
+4. Set hình GameBoard tương tự Background (tự tùy chỉnh Rect Transform phù hợp). 
+	Tạo script C# GridManager -> quản lý grid GameBoard & set phù hợp với grid trong ảnh.
