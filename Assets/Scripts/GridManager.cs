@@ -23,11 +23,6 @@ public class GridManager : MonoBehaviour
         GenerateGrid();
         DrawGridLines();
         DrawGridBorder();
-
-        ColorCell(0, 0, Color.red);
-        ColorCell(0, 7, Color.red);
-        ColorCell(7, 0, Color.red);
-        ColorCell(7, 7, Color.red);
     }
 
     void OnRectTransformDimensionsChange()
@@ -72,7 +67,7 @@ public class GridManager : MonoBehaviour
 
                 rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0, 0);
                 rt.sizeDelta = new Vector2(cellWidth, cellHeight);
-                rt.anchoredPosition = new Vector2(paddingX + x * cellWidth,paddingY + y * cellHeight);
+                rt.anchoredPosition = new Vector2(paddingX + x * cellWidth, paddingY + y * cellHeight);
 
                 Image img = newCell.GetComponent<Image>();
                 img.color = new Color(1, 1, 1, 0.1f);
@@ -119,9 +114,9 @@ public class GridManager : MonoBehaviour
 
             rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0, 0);
             rt.sizeDelta = new Vector2(2f, gridHeight);
-            rt.anchoredPosition = new Vector2(paddingX + x*cellWidth, paddingY);
+            rt.anchoredPosition = new Vector2(paddingX + x * cellWidth, paddingY);
             gridLines.Add(line);
-        }        
+        }
     }
 
     void DrawGridBorder()
@@ -167,16 +162,19 @@ public class GridManager : MonoBehaviour
         MakeBorder(new Vector2(borderThickness, gridHeight),
                 new Vector2(paddingX + gridWidth, paddingY));
     }
-
-    public void ColorCell(int x, int y, Color color)
+    
+    public void HighlightCell(int x, int y, Color color)
     {
-        if (x >= 0 && x < width && y >= 0 && y < height)
+        if (cells == null) return;
+        if (x < 0 || x >= width || y < 0 || y >= height) return;
+
+        GameObject cell = cells[x, y];
+        if (cell == null) return;
+
+        Image img = cell.GetComponent<Image>();
+        if (img != null)
         {
-            Image img = cells[x, y].GetComponent<Image>();
-            if (img != null)
-            {
-                img.color = color;
-            }
+            img.color = color;
         }
     }
 }
