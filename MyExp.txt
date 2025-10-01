@@ -10,3 +10,31 @@
 4. Set hình GameBoard tương tự Background (tự tùy chỉnh Rect Transform phù hợp). 
 	Tạo script C# GridManager -> quản lý grid GameBoard(Tạo Background cho GameBoard + tạo grid).
 		Dùng code để tạo Grid 8x8 (hiển thị các đường kẻ, viền grid, test color các ô).
+
+5. Viết logic kiểm tra hàng/cột đầy và tính điểm
+	Đánh dấu cell đã chiếm
+	Kiểm tra hàng/cột đầy
+	Xóa hàng/cột đầy & Cộng điểm.
+	*Kéo thả block vào grid:
+		BlockPrefab: mỗi block là một prefab chứa mini-cell sắp xếp theo hình dạng.
+		Drag & Drop: khi người chơi kéo block, nó đi theo chuột.
+		Thả block: khi nhả chuột, tính toạ độ grid gần nhất.
+			Nếu block fit vào grid (không tràn, không đè cell đã chiếm) → đặt block vào grid.
+			Nếu không hợp lệ → block quay về vị trí cũ.
+		Cập nhật logic.
+
+6. Định nghĩa hình dạng Block
+	Tạo BlockDefinition C# để kiểm soát logic
+	Tạo prefab block trong Unity
+
+7. Tạo BlockSpawner để tự động sinh ra block mới
+	Luôn có 3 block xuất hiện ở “khay” phía dưới màn hình.
+	Khi người chơi đặt 1 block vào grid → khay sẽ tự động sinh ra 1 block mới luôn.
+	Mỗi block là một prefab (có gắn script BlockDrag).
+	BlockSpawner sẽ chịu trách nhiệm:
+		Tạo 3 slot trong khay
+		Sinh block ngẫu nhiên từ danh sách prefab.
+		Gán tham chiếu GridManager và GridLogic cho từng block.
+		Khi block được đặt thành công → báo lại cho spawner.
+
+ 

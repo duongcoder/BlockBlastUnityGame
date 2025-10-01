@@ -523,6 +523,53 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &998810912
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 998810914}
+  - component: {fileID: 998810913}
+  m_Layer: 0
+  m_Name: GameLogic
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &998810913
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 998810912}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 516a8744894de2647920124c2b6210c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gridManager: {fileID: 1561630717}
+  width: 8
+  height: 8
+--- !u!4 &998810914
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 998810912}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.1261845, y: -1.603205, z: 90}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1189805670
 GameObject:
   m_ObjectHideFlags: 0
@@ -610,6 +657,7 @@ GameObject:
   - component: {fileID: 1561630716}
   - component: {fileID: 1561630715}
   - component: {fileID: 1561630717}
+  - component: {fileID: 1561630718}
   m_Layer: 5
   m_Name: GameBoard
   m_TagString: Untagged
@@ -650,7 +698,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 0.49776387, g: 0.18679239, b: 0.6226415, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -691,6 +739,22 @@ MonoBehaviour:
   cellPrefab: {fileID: 6080360890661599009, guid: c8fb235bf68e62f4097969b44eecfc42, type: 3}
   linePrefab: {fileID: 5334385891642677193, guid: 77561b6be01a0434f947d9b7330e7420, type: 3}
   paddingRatio: {x: 0.05, y: 0.05}
+  borderThickness: 4
+  borderColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+--- !u!114 &1561630718
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1561630713}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec36df8f4d02880468db31888178b097, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gridManager: {fileID: 1561630717}
+  gridLogic: {fileID: 998810913}
 --- !u!1 &1712910976
 GameObject:
   m_ObjectHideFlags: 0
@@ -774,3 +838,4 @@ SceneRoots:
   - {fileID: 619394802}
   - {fileID: 398854588}
   - {fileID: 876099529}
+  - {fileID: 998810914}

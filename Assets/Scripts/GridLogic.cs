@@ -84,4 +84,10 @@ public class GridLogic : MonoBehaviour
             Debug.Log("Score: " + score);
         }
     }
+
+    public bool IsOccupied(int x, int y)
+    {
+        if (x < 0 || x >= width || y < 0 || y >= height) return true;
+        return occupied[x, y];
+    }
 }
