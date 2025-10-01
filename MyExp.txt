@@ -8,4 +8,5 @@
 3. Sử dụng Sprite Editor để cắt những thành phần Image không nền.
 
 4. Set hình GameBoard tương tự Background (tự tùy chỉnh Rect Transform phù hợp). 
-	Tạo script C# GridManager -> quản lý grid GameBoard & set phù hợp với grid trong ảnh.
+	Tạo script C# GridManager -> quản lý grid GameBoard(Tạo Background cho GameBoard + tạo grid).
+		Dùng code để tạo Grid 8x8 (hiển thị các đường kẻ, viền grid, test color các ô).

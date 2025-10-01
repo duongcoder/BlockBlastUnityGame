@@ -649,14 +649,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.49776387, g: 0.18679239, b: 0.6226415, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -5711637743850161618, guid: 8d6e2ad5b139213409203b90e4d34f62, type: 3}
+  m_Sprite: {fileID: 0}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -688,7 +688,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   width: 8
   height: 8
-  cellPrefab: {fileID: 0}
+  cellPrefab: {fileID: 6080360890661599009, guid: c8fb235bf68e62f4097969b44eecfc42, type: 3}
+  linePrefab: {fileID: 5334385891642677193, guid: 77561b6be01a0434f947d9b7330e7420, type: 3}
+  paddingRatio: {x: 0.05, y: 0.05}
 --- !u!1 &1712910976
 GameObject:
   m_ObjectHideFlags: 0

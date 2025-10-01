@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -6,32 +7,61 @@ public class GridManager : MonoBehaviour
     public int width = 8;
     public int height = 8;
     public GameObject cellPrefab;
+    public GameObject linePrefab;
+    public Vector2 paddingRatio = new Vector2(0.03f, 0.03f);
+    public float borderThickness = 4f;
+    public Color borderColor = Color.yellow;
 
     private GameObject[,] cells;
     private RectTransform boardRect;
+    private List<GameObject> gridLines = new List<GameObject>();
+    private List<GameObject> gridBorder = new List<GameObject>();
 
     void Start()
     {
         boardRect = GetComponent<RectTransform>();
         GenerateGrid();
+        DrawGridLines();
+        DrawGridBorder();
 
         ColorCell(0, 0, Color.red);
+        ColorCell(0, 7, Color.red);
+        ColorCell(7, 0, Color.red);
+        ColorCell(7, 7, Color.red);
+    }
+
+    void OnRectTransformDimensionsChange()
+    {
+        if (boardRect != null && gameObject.activeInHierarchy)
+        {
+            GenerateGrid();
+            DrawGridLines();
+            DrawGridBorder();
+        }
     }
 
     void GenerateGrid()
     {
+        if (cells != null)
+        {
+            foreach (var cell in cells)
+            {
+                if (cell != null) Destroy(cell);
+            }
+        }
+
         cells = new GameObject[width, height];
 
-        // Lấy kích thước thực tế của GameBoard sau khi Canvas scale
         Vector2 boardSize = boardRect.rect.size;
 
-        float cellWidth = boardSize.x / width;
-        float cellHeight = boardSize.y / height;
+        float paddingX = boardSize.x * paddingRatio.x;
+        float paddingY = boardSize.y * paddingRatio.y;
 
-        // Tính toán Offset
-        Vector2 gridOriginRatio = new Vector2(0.02f, 0.02f);
-        Vector2 gridOrigin = new Vector2(boardSize.x * gridOriginRatio.x, boardSize.y * gridOriginRatio.y);
+        float gridWidth = boardSize.x - 2 * paddingX;
+        float gridHeight = boardSize.y - 2 * paddingY;
 
+        float cellWidth = gridWidth / width;
+        float cellHeight = gridHeight / height;
 
         for (int x = 0; x < width; x++)
         {
@@ -40,48 +70,102 @@ public class GridManager : MonoBehaviour
                 GameObject newCell = Instantiate(cellPrefab, transform);
                 RectTransform rt = newCell.GetComponent<RectTransform>();
 
-                // Đặt anchor/pivot để bám vào góc dưới trái của GameBoard
-                rt.anchorMin = new Vector2(0, 0);
-                rt.anchorMax = new Vector2(0, 0);
-                rt.pivot = new Vector2(0, 0);
-
-                // Đặt kích thước và vị trí từng ô
+                rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0, 0);
                 rt.sizeDelta = new Vector2(cellWidth, cellHeight);
-                rt.anchoredPosition = new Vector2(x * cellWidth, y * cellHeight) + gridOrigin;
+                rt.anchoredPosition = new Vector2(paddingX + x * cellWidth,paddingY + y * cellHeight);
+
+                Image img = newCell.GetComponent<Image>();
+                img.color = new Color(1, 1, 1, 0.1f);
 
                 cells[x, y] = newCell;
             }
         }
+    }
 
-        // for (int x = 0; x < width; x++)
-        // {
-        //     for (int y = 0; y < height; y++)
-        //     {
-        //         GameObject newCell = Instantiate(cellPrefab, transform);
-        //         cells[x, y] = newCell;
-        //     }
-        // }
+    void DrawGridLines()
+    {
+        foreach (var line in gridLines)
+        {
+            if (line != null) Destroy(line);
+        }
+        gridLines.Clear();
 
-        // float cellWidth = boardRect.rect.width / width;
-        // float cellHeight = boardRect.rect.height / height;
+        Vector2 boardSize = boardRect.rect.size;
 
-        // for (int x = 0; x < width; x++)
-        // {
-        //     for (int y = 0; y < height; y++)
-        //     {
-        //         GameObject newCell = Instantiate(cellPrefab, transform);
-        //         RectTransform rt = newCell.GetComponent<RectTransform>();
+        float paddingX = boardSize.x * paddingRatio.x;
+        float paddingY = boardSize.y * paddingRatio.y;
 
-        //         rt.anchorMin = new Vector2(0, 0);
-        //         rt.anchorMax = new Vector2(0, 0);
-        //         rt.pivot = new Vector2(0, 0);
+        float gridWidth = boardSize.x - 2 * paddingX;
+        float gridHeight = boardSize.y - 2 * paddingY;
 
-        //         rt.sizeDelta = new Vector2(cellWidth, cellHeight);
-        //         rt.anchoredPosition = new Vector2(x * cellWidth, y * cellHeight);
+        float cellWidth = gridWidth / width;
+        float cellHeight = gridHeight / height;
 
-        //         cells[x, y] = newCell;
-        //     }
-        // }
+        for (int y = 1; y < height; y++)
+        {
+            GameObject line = Instantiate(linePrefab, transform);
+            RectTransform rt = line.GetComponent<RectTransform>();
+
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0, 0);
+            rt.sizeDelta = new Vector2(gridWidth, 2f);
+            rt.anchoredPosition = new Vector2(paddingX, paddingY + y * cellHeight);
+            gridLines.Add(line);
+        }
+
+        for (int x = 1; x < height; x++)
+        {
+            GameObject line = Instantiate(linePrefab, transform);
+            RectTransform rt = line.GetComponent<RectTransform>();
+
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0, 0);
+            rt.sizeDelta = new Vector2(2f, gridHeight);
+            rt.anchoredPosition = new Vector2(paddingX + x*cellWidth, paddingY);
+            gridLines.Add(line);
+        }        
+    }
+
+    void DrawGridBorder()
+    {
+        foreach (var b in gridBorder)
+        {
+            if (b != null) Destroy(b);
+        }
+        gridBorder.Clear();
+
+        Vector2 boardSize = boardRect.rect.size;
+
+        float paddingX = boardSize.x * 0.05f;
+        float paddingY = boardSize.y * 0.05f;
+
+        float gridWidth = boardSize.x - 2 * paddingX;
+        float gridHeight = boardSize.y - 2 * paddingY;
+
+        GameObject MakeBorder(Vector2 size, Vector2 pos)
+        {
+            GameObject line = Instantiate(linePrefab, transform);
+            RectTransform rt = line.GetComponent<RectTransform>();
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0, 0);
+            rt.sizeDelta = size;
+            rt.anchoredPosition = pos;
+
+            var img = line.GetComponent<Image>();
+            if (img != null) img.color = borderColor;
+
+            gridBorder.Add(line);
+            return line;
+        }
+
+        MakeBorder(new Vector2(gridWidth, borderThickness),
+                new Vector2(paddingX, paddingY));
+
+        MakeBorder(new Vector2(gridWidth, borderThickness),
+                new Vector2(paddingX, paddingY + gridHeight));
+
+        MakeBorder(new Vector2(borderThickness, gridHeight),
+                new Vector2(paddingX, paddingY));
+
+        MakeBorder(new Vector2(borderThickness, gridHeight),
+                new Vector2(paddingX + gridWidth, paddingY));
     }
 
     public void ColorCell(int x, int y, Color color)
