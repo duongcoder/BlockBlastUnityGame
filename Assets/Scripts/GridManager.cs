@@ -1,6 +1,6 @@
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections.Generic;
 
 public class GridManager : MonoBehaviour
 {
@@ -11,6 +11,7 @@ public class GridManager : MonoBehaviour
     public Vector2 paddingRatio = new Vector2(0.03f, 0.03f);
     public float borderThickness = 4f;
     public Color borderColor = Color.yellow;
+    public event System.Action OnGridResized;
 
     private GameObject[,] cells;
     private RectTransform boardRect;
@@ -32,6 +33,7 @@ public class GridManager : MonoBehaviour
             GenerateGrid();
             DrawGridLines();
             DrawGridBorder();
+            OnGridResized?.Invoke();
         }
     }
 
@@ -107,7 +109,7 @@ public class GridManager : MonoBehaviour
             gridLines.Add(line);
         }
 
-        for (int x = 1; x < height; x++)
+        for (int x = 1; x < width; x++)
         {
             GameObject line = Instantiate(linePrefab, transform);
             RectTransform rt = line.GetComponent<RectTransform>();
@@ -129,8 +131,8 @@ public class GridManager : MonoBehaviour
 
         Vector2 boardSize = boardRect.rect.size;
 
-        float paddingX = boardSize.x * 0.05f;
-        float paddingY = boardSize.y * 0.05f;
+        float paddingX = boardSize.x * paddingRatio.x;
+        float paddingY = boardSize.y * paddingRatio.y;
 
         float gridWidth = boardSize.x - 2 * paddingX;
         float gridHeight = boardSize.y - 2 * paddingY;
@@ -150,19 +152,12 @@ public class GridManager : MonoBehaviour
             return line;
         }
 
-        MakeBorder(new Vector2(gridWidth, borderThickness),
-                new Vector2(paddingX, paddingY));
-
-        MakeBorder(new Vector2(gridWidth, borderThickness),
-                new Vector2(paddingX, paddingY + gridHeight));
-
-        MakeBorder(new Vector2(borderThickness, gridHeight),
-                new Vector2(paddingX, paddingY));
-
-        MakeBorder(new Vector2(borderThickness, gridHeight),
-                new Vector2(paddingX + gridWidth, paddingY));
+        MakeBorder(new Vector2(gridWidth, borderThickness), new Vector2(paddingX, paddingY));
+        MakeBorder(new Vector2(gridWidth, borderThickness), new Vector2(paddingX, paddingY + gridHeight));
+        MakeBorder(new Vector2(borderThickness, gridHeight), new Vector2(paddingX, paddingY));
+        MakeBorder(new Vector2(borderThickness, gridHeight), new Vector2(paddingX + gridWidth, paddingY));
     }
-    
+
     public void HighlightCell(int x, int y, Color color)
     {
         if (cells == null) return;
@@ -172,9 +167,30 @@ public class GridManager : MonoBehaviour
         if (cell == null) return;
 
         Image img = cell.GetComponent<Image>();
-        if (img != null)
-        {
-            img.color = color;
-        }
+        if (img != null) img.color = color;
+    }
+
+    public float GetCellSize()
+    {
+        if (boardRect == null) boardRect = GetComponent<RectTransform>();
+
+        Vector2 boardSize = boardRect.rect.size;
+
+        float paddingX = boardSize.x * paddingRatio.x;
+        float paddingY = boardSize.y * paddingRatio.y;
+
+        float gridWidth = boardSize.x - 2 * paddingX;
+        float gridHeight = boardSize.y - 2 * paddingY;
+
+        float cellWidth = gridWidth / width;
+        float cellHeight = gridHeight / height;
+
+        return Mathf.Min(cellWidth, cellHeight);
+    }
+
+    public RectTransform GetBoardRect()
+    {
+        if (boardRect == null) boardRect = GetComponent<RectTransform>();
+        return boardRect;
     }
 }

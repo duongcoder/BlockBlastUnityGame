@@ -27,7 +27,14 @@
 	Tạo BlockDefinition C# để kiểm soát logic
 	Tạo prefab block trong Unity
 
-7. Tạo BlockSpawner để tự động sinh ra block mới
+7. Tạo file BlockDrag để quản lý hành động kéo thả vào Grid
+	Khi người chơi bắt đầu kéo (OnBeginDrag): lưu lại vị trí ban đầu, đổi parent nếu cần để block hiển thị đúng.
+	Khi đang kéo (OnDrag): cập nhật vị trí block theo chuột để block đi theo con trỏ.
+		Bug khi di chuyển chuột sẽ làm mất hình block:
+			Dùng RectTransformUtility để chuyển đổi toạ độ chuột sang local position trong Canvas.
+	Khi thả ra (OnEndDrag): xác định vị trí thả, kiểm tra xem block có đặt hợp lệ không. (Nếu không đúng thì trả block về vị trí ban đầu)
+
+8. Tạo BlockSpawner để tự động sinh ra block mới
 	Luôn có 3 block xuất hiện ở “khay” phía dưới màn hình.
 	Khi người chơi đặt 1 block vào grid → khay sẽ tự động sinh ra 1 block mới luôn.
 	Mỗi block là một prefab (có gắn script BlockDrag).
