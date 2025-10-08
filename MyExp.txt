@@ -44,4 +44,11 @@
 		Gán tham chiếu GridManager và GridLogic cho từng block.
 		Khi block được đặt thành công → báo lại cho spawner.
 
+9. Kiểm tra và fix bug
+	* Bug: BlockSpawner sinh ra tất cả các block cùng lúc. (thường chỉ cần 3 block)
+	& Bug: "Trying to remove CellPrefab(Clone) ..." xuất hiện khi bạn bật/tắt (SetActive) hoặc Destroy các CellPrefab đúng lúc Unity đang chạy vòng lặp layout/rebuild (UI UGUI).
+		-> Dùng pooling và StartCoroutine để Trì hoãn việc Clear/Render sang frame sau. (áp dụng cho cả BlockDrag & BlockSpawner để tránh lỗi).
+	* Bug: Các block Render ra nhưng không hiển thị UI Image.
+		-> 
+
  

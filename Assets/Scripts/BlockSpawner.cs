@@ -1,4 +1,6 @@
 using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
 
 public class BlockSpawner : MonoBehaviour
 {
@@ -10,6 +12,11 @@ public class BlockSpawner : MonoBehaviour
     public float gap = 20f;
     public bool refreshOnGridResize = true;
     public bool respawnOnPlaced = true;
+    public int slotCount = 3;
+
+    private Dictionary<GameObject, Queue<GameObject>> poolDict = new Dictionary<GameObject, Queue<GameObject>>();
+    private Dictionary<GameObject, GameObject> instanceToPrefab = new Dictionary<GameObject, GameObject>();
+    private GameObject[] activeBlocks;
 
     private void OnEnable()
     {
@@ -23,38 +30,55 @@ public class BlockSpawner : MonoBehaviour
             gridManager.OnGridResized -= RefreshAll;
     }
 
+    private void Awake()
+    {
+        activeBlocks = new GameObject[slotCount];
+        foreach (var prefab in blockPrefabs)
+        {
+            poolDict[prefab] = new Queue<GameObject>();
+        }
+    }
+
     private void Start()
     {
+        StartCoroutine(SpawnDelayed());
+    }
+
+    private IEnumerator SpawnDelayed()
+    {
+        yield return null;
         SpawnAll();
     }
 
     public void SpawnAll()
     {
-        if (spawnParent == null || gridManager == null || blockPrefabs == null || blockPrefabs.Length == 0)
-            return;
+        ClearTray();
 
         float cellSize = gridManager.GetCellSize();
 
-        for (int i = 0; i < blockPrefabs.Length; i++)
+        for (int i = 0; i < slotCount; i++)
         {
-            SpawnOne(blockPrefabs[i], i, cellSize);
+            SpawnOneAtSlot(i, cellSize);
         }
     }
 
-    private void SpawnOne(GameObject prefab, int index, float cellSize)
+    private void SpawnOneAtSlot(int slotIndex, float cellSize)
     {
-        if (prefab == null) return;
+        if (blockPrefabs.Length == 0) return;
 
-        GameObject go = Instantiate(prefab, spawnParent);
+        GameObject prefab = blockPrefabs[Random.Range(0, blockPrefabs.Length)];
+        GameObject go = GetFromPool(prefab);
+        go.transform.SetParent(spawnParent, false);
+        go.SetActive(true);
+
         var rt = go.GetComponent<RectTransform>();
-
-        if (localPositions != null && index < localPositions.Length)
+        if (localPositions != null && slotIndex < localPositions.Length)
         {
-            rt.anchoredPosition = localPositions[index];
+            rt.anchoredPosition = localPositions[slotIndex];
         }
         else
         {
-            rt.anchoredPosition = new Vector2(index * (cellSize * 3f + gap), 0f);
+            rt.anchoredPosition = new Vector2(slotIndex * (cellSize * 3f + gap), 0f);
         }
 
         var drag = go.GetComponent<BlockDrag>();
@@ -62,24 +86,83 @@ public class BlockSpawner : MonoBehaviour
         {
             drag.gridManager = gridManager;
             drag.gridLogic = gridLogic;
+            drag.onPlaced = null;
 
             if (respawnOnPlaced)
             {
-                drag.onPlaced += () => OnBlockPlaced(index);
+                int capturedIndex = slotIndex;
+                drag.onPlaced += () => OnBlockPlaced(capturedIndex, go);
             }
         }
 
         var renderer = go.GetComponentInChildren<BlockRenderer>();
-        var def = drag != null ? drag.definition : null;
-        if (renderer != null && def != null)
+        if (renderer != null && drag != null && drag.definition != null)
         {
-            renderer.Render(def, cellSize);
+            renderer.Render(drag.definition, cellSize);
+        }
+
+        activeBlocks[slotIndex] = go;
+        instanceToPrefab[go] = prefab;
+    }
+
+    private void OnBlockPlaced(int slotIndex, GameObject instance)
+    {
+        StartCoroutine(HandlePlacedDelayed(slotIndex, instance));
+    }
+
+    private IEnumerator HandlePlacedDelayed(int slotIndex, GameObject instance)
+    {
+        yield return null;
+
+        if (instance != null && instanceToPrefab.TryGetValue(instance, out var prefab))
+        {
+            ReturnToPool(prefab, instance);
+            instanceToPrefab.Remove(instance);
+        }
+
+        float cellSize = gridManager.GetCellSize();
+        SpawnOneAtSlot(slotIndex, cellSize);
+    }
+
+    private GameObject GetFromPool(GameObject prefab)
+    {
+        if (poolDict[prefab].Count > 0)
+        {
+            return poolDict[prefab].Dequeue();
+        }
+        else
+        {
+            return Instantiate(prefab);
+        }
+    }
+
+    private void ReturnToPool(GameObject prefab, GameObject instance)
+    {
+        if (instance == null) return;
+        instance.SetActive(false);
+        instance.transform.SetParent(transform, false);
+        poolDict[prefab].Enqueue(instance);
+    }
+
+    public void ClearTray()
+    {
+        for (int i = 0; i < activeBlocks.Length; i++)
+        {
+            if (activeBlocks[i] != null)
+            {
+                var inst = activeBlocks[i];
+                if (instanceToPrefab.TryGetValue(inst, out var prefab))
+                {
+                    ReturnToPool(prefab, inst);
+                    instanceToPrefab.Remove(inst);
+                }
+                activeBlocks[i] = null;
+            }
         }
     }
 
     private void RefreshAll()
     {
-        if (spawnParent == null || gridManager == null) return;
         float cellSize = gridManager.GetCellSize();
 
         for (int i = 0; i < spawnParent.childCount; i++)
@@ -91,29 +174,6 @@ public class BlockSpawner : MonoBehaviour
             {
                 renderer.Render(drag.definition, cellSize);
             }
-        }
-    }
-
-    private void OnBlockPlaced(int slotIndex)
-    {
-        if (!respawnOnPlaced) return;
-        if (blockPrefabs == null || slotIndex < 0 || slotIndex >= blockPrefabs.Length) return;
-
-        if (slotIndex < spawnParent.childCount)
-        {
-            var old = spawnParent.GetChild(slotIndex);
-            if (old != null) Destroy(old.gameObject);
-        }
-
-        float cellSize = gridManager.GetCellSize();
-        SpawnOne(blockPrefabs[slotIndex], slotIndex, cellSize);
-    }
-
-    public void ClearTray()
-    {
-        for (int i = spawnParent.childCount - 1; i >= 0; i--)
-        {
-            Destroy(spawnParent.GetChild(i).gameObject);
         }
     }
 }

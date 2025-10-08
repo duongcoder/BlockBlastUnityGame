@@ -1,9 +1,9 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 using System.Collections.Generic;
 
 [RequireComponent(typeof(GridLayoutGroup))]
-[RequireComponent(typeof(RectTransform))]
 public class BlockRenderer : MonoBehaviour
 {
     public GameObject cellPrefab;
@@ -13,8 +13,9 @@ public class BlockRenderer : MonoBehaviour
 
     private GridLayoutGroup layout;
     private RectTransform rectTransform;
-    private readonly List<GameObject> spawnedCells = new List<GameObject>();
+    private readonly List<GameObject> pool = new List<GameObject>();
     private readonly HashSet<Vector2Int> shapeSet = new HashSet<Vector2Int>();
+    private readonly List<GameObject> pendingDisable = new List<GameObject>();
 
     private void Awake()
     {
@@ -28,9 +29,17 @@ public class BlockRenderer : MonoBehaviour
 
     public void Render(BlockDefinition definition, float cellSize)
     {
-        Clear();
+        StartCoroutine(RenderDelayed(definition, cellSize));
+    }
+
+    private IEnumerator RenderDelayed(BlockDefinition definition, float cellSize)
+    {
+        yield return null;
+
+        InternalClear();
+
         if (definition == null || definition.shapeCells == null || definition.shapeCells.Count == 0)
-            return;
+            yield break;
 
         GetBoundsAndNormalize(definition.shapeCells, out int width, out int height, out var normalized);
 
@@ -45,33 +54,62 @@ public class BlockRenderer : MonoBehaviour
         float totalH = height * cellSize + (height - 1) * spacing.y;
         rectTransform.sizeDelta = new Vector2(totalW, totalH);
 
-        var parentImage = GetComponent<Image>();
-        if (parentImage != null) parentImage.preserveAspect = true;
+        int needed = width * height;
+        EnsurePoolSize(needed);
 
+        int index = 0;
         for (int y = height - 1; y >= 0; y--)
         {
             for (int x = 0; x < width; x++)
             {
-                GameObject go = Instantiate(cellPrefab, transform);
+                var go = pool[index++];
+                go.SetActive(true);
+
                 var img = go.GetComponent<Image>();
-                if (img != null)
-                {
-                    img.color = shapeSet.Contains(new Vector2Int(x, y)) ? cellColor : emptyColor;
-                }
-                spawnedCells.Add(go);
+                img.color = shapeSet.Contains(new Vector2Int(x, y)) ? cellColor : emptyColor;
             }
         }
     }
 
     public void Clear()
     {
-        for (int i = 0; i < spawnedCells.Count; i++)
+        for (int i = 0; i < pool.Count; i++)
         {
-            if (spawnedCells[i] != null)
-                Destroy(spawnedCells[i]);
+            if (pool[i] != null && pool[i].activeSelf)
+                pendingDisable.Add(pool[i]);
         }
-        spawnedCells.Clear();
         shapeSet.Clear();
+    }
+
+    private void InternalClear()
+    {
+        for (int i = 0; i < pool.Count; i++)
+        {
+            if (pool[i] != null)
+                pool[i].SetActive(false);
+        }
+        shapeSet.Clear();
+    }
+
+    private void LateUpdate()
+    {
+        if (pendingDisable.Count > 0)
+        {
+            foreach (var go in pendingDisable)
+                if (go != null) go.SetActive(false);
+
+            pendingDisable.Clear();
+        }
+    }
+
+    private void EnsurePoolSize(int needed)
+    {
+        while (pool.Count < needed)
+        {
+            GameObject go = Instantiate(cellPrefab, transform);
+            go.SetActive(false);
+            pool.Add(go);
+        }
     }
 
     private static void GetBoundsAndNormalize(IReadOnlyList<Vector2Int> cells, out int width, out int height, out List<Vector2Int> normalized)
@@ -95,11 +133,5 @@ public class BlockRenderer : MonoBehaviour
         {
             normalized.Add(new Vector2Int(c.x - minX, c.y - minY));
         }
-    }
-
-    public Vector2Int GetBlockSize()
-    {
-        if (layout == null) return Vector2Int.zero;
-        return new Vector2Int(layout.constraintCount, Mathf.CeilToInt((float)spawnedCells.Count / layout.constraintCount));
     }
 }

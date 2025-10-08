@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEngine.UI;
+using System.Collections;
 using UnityEngine.EventSystems;
 
 public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
@@ -34,7 +34,7 @@ public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
             gridManager.OnGridResized -= RenderBlock;
     }
 
-    private System.Collections.IEnumerator RenderNextFrame()
+    private IEnumerator RenderNextFrame()
     {
         yield return null;
         RenderBlock();
@@ -140,6 +140,7 @@ public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
         gridLogic?.CheckAndClearLines();
 
         onPlaced?.Invoke();
-        Destroy(gameObject);
+        enabled = false;
+        gameObject.SetActive(false);
     }
 }
