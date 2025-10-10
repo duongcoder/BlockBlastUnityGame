@@ -49,6 +49,6 @@
 	& Bug: "Trying to remove CellPrefab(Clone) ..." xuất hiện khi bạn bật/tắt (SetActive) hoặc Destroy các CellPrefab đúng lúc Unity đang chạy vòng lặp layout/rebuild (UI UGUI).
 		-> Dùng pooling và StartCoroutine để Trì hoãn việc Clear/Render sang frame sau. (áp dụng cho cả BlockDrag & BlockSpawner để tránh lỗi).
 	* Bug: Các block Render ra nhưng không hiển thị UI Image.
-		-> 
+		-> Dùng Sprite Image, bỏ các Cells con trong Block Prefab, thay đổi BlockRenderer để Render ra Sprite Image UI.
 
  

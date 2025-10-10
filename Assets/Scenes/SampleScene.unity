@@ -608,10 +608,9 @@ MonoBehaviour:
   - {fileID: 730698138948832657, guid: a7ad44328cf527c42b9fb95fc0a0ad54, type: 3}
   - {fileID: 3919108837061056720, guid: ecc16567e15774d45ae4795d938f9797, type: 3}
   - {fileID: 6050230022073240350, guid: 7bda95ba09daefc41aca86ab02e70f24, type: 3}
-  localPositions: []
-  gap: 20
   refreshOnGridResize: 1
   respawnOnPlaced: 1
+  slotCount: 3
 --- !u!4 &1168095212
 Transform:
   m_ObjectHideFlags: 0
@@ -758,7 +757,7 @@ MonoBehaviour:
     m_Top: 0
     m_Bottom: 0
   m_ChildAlignment: 4
-  m_Spacing: 70
+  m_Spacing: 200
   m_ChildForceExpandWidth: 0
   m_ChildForceExpandHeight: 0
   m_ChildControlWidth: 0
