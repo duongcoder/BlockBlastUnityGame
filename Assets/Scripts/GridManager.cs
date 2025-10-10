@@ -57,8 +57,12 @@ public class GridManager : MonoBehaviour
         float gridWidth = boardSize.x - 2 * paddingX;
         float gridHeight = boardSize.y - 2 * paddingY;
 
-        float cellWidth = gridWidth / width;
-        float cellHeight = gridHeight / height;
+        float cellSize = Mathf.Min(gridWidth / width, gridHeight / height);
+
+        float totalGridWidth = cellSize * width;
+        float totalGridHeight = cellSize * height;
+        float offsetX = paddingX + (gridWidth - totalGridWidth) / 2f;
+        float offsetY = paddingY + (gridHeight - totalGridHeight) / 2f;
 
         for (int x = 0; x < width; x++)
         {
@@ -68,8 +72,8 @@ public class GridManager : MonoBehaviour
                 RectTransform rt = newCell.GetComponent<RectTransform>();
 
                 rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0, 0);
-                rt.sizeDelta = new Vector2(cellWidth, cellHeight);
-                rt.anchoredPosition = new Vector2(paddingX + x * cellWidth, paddingY + y * cellHeight);
+                rt.sizeDelta = new Vector2(cellSize, cellSize);
+                rt.anchoredPosition = new Vector2(offsetX + x * cellSize, offsetY + y * cellSize);
 
                 Image img = newCell.GetComponent<Image>();
                 img.color = new Color(1, 1, 1, 0.1f);
@@ -95,8 +99,12 @@ public class GridManager : MonoBehaviour
         float gridWidth = boardSize.x - 2 * paddingX;
         float gridHeight = boardSize.y - 2 * paddingY;
 
-        float cellWidth = gridWidth / width;
-        float cellHeight = gridHeight / height;
+        float cellSize = Mathf.Min(gridWidth / width, gridHeight / height);
+
+        float totalGridHeight = cellSize * height;
+        float totalGridWidth = cellSize * width;
+        float offsetX = paddingX + (gridWidth - totalGridWidth) / 2f;
+        float offsetY = paddingY + (gridHeight - totalGridHeight) / 2f;
 
         for (int y = 1; y < height; y++)
         {
@@ -104,8 +112,8 @@ public class GridManager : MonoBehaviour
             RectTransform rt = line.GetComponent<RectTransform>();
 
             rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0, 0);
-            rt.sizeDelta = new Vector2(gridWidth, 2f);
-            rt.anchoredPosition = new Vector2(paddingX, paddingY + y * cellHeight);
+            rt.sizeDelta = new Vector2(totalGridWidth, 2f);
+            rt.anchoredPosition = new Vector2(offsetX, offsetY + y * cellSize);
             gridLines.Add(line);
         }
 
@@ -115,8 +123,8 @@ public class GridManager : MonoBehaviour
             RectTransform rt = line.GetComponent<RectTransform>();
 
             rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0, 0);
-            rt.sizeDelta = new Vector2(2f, gridHeight);
-            rt.anchoredPosition = new Vector2(paddingX + x * cellWidth, paddingY);
+            rt.sizeDelta = new Vector2(2f, totalGridHeight);
+            rt.anchoredPosition = new Vector2(offsetX + x * cellSize, offsetY);
             gridLines.Add(line);
         }
     }
@@ -137,6 +145,13 @@ public class GridManager : MonoBehaviour
         float gridWidth = boardSize.x - 2 * paddingX;
         float gridHeight = boardSize.y - 2 * paddingY;
 
+        float cellSize = Mathf.Min(gridWidth / width, gridHeight / height);
+
+        float totalGridWidth = cellSize * width;
+        float totalGridHeight = cellSize * height;
+        float offsetX = paddingX + (gridWidth - totalGridWidth) / 2f;
+        float offsetY = paddingY + (gridHeight - totalGridHeight) / 2f;
+
         GameObject MakeBorder(Vector2 size, Vector2 pos)
         {
             GameObject line = Instantiate(linePrefab, transform);
@@ -152,10 +167,10 @@ public class GridManager : MonoBehaviour
             return line;
         }
 
-        MakeBorder(new Vector2(gridWidth, borderThickness), new Vector2(paddingX, paddingY));
-        MakeBorder(new Vector2(gridWidth, borderThickness), new Vector2(paddingX, paddingY + gridHeight));
-        MakeBorder(new Vector2(borderThickness, gridHeight), new Vector2(paddingX, paddingY));
-        MakeBorder(new Vector2(borderThickness, gridHeight), new Vector2(paddingX + gridWidth, paddingY));
+        MakeBorder(new Vector2(totalGridWidth, borderThickness), new Vector2(offsetX, offsetY));
+        MakeBorder(new Vector2(totalGridWidth, borderThickness), new Vector2(offsetX, offsetY + totalGridHeight));
+        MakeBorder(new Vector2(borderThickness, totalGridHeight), new Vector2(offsetX, offsetY));
+        MakeBorder(new Vector2(borderThickness, totalGridHeight), new Vector2(offsetX + totalGridWidth, offsetY));
     }
 
     public void HighlightCell(int x, int y, Color color)

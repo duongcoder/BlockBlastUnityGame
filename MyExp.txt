@@ -50,5 +50,7 @@
 		-> Dùng pooling và StartCoroutine để Trì hoãn việc Clear/Render sang frame sau. (áp dụng cho cả BlockDrag & BlockSpawner để tránh lỗi).
 	* Bug: Các block Render ra nhưng không hiển thị UI Image.
 		-> Dùng Sprite Image, bỏ các Cells con trong Block Prefab, thay đổi BlockRenderer để Render ra Sprite Image UI.
+	* Bug: Grid co dãn theo tỉ lệ màn hình -> mất độ vuông của ô
+		-> Dùng cùng một cellSize cho cả Width và Height.
 
  

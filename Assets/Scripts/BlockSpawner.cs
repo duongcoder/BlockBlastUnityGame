@@ -8,8 +8,6 @@ public class BlockSpawner : MonoBehaviour
     public GridLogic gridLogic;
     public Transform spawnParent;
     public GameObject[] blockPrefabs;
-    // public Vector2[] localPositions;
-    // public float gap = 20f;
     public bool refreshOnGridResize = true;
     public bool respawnOnPlaced = true;
     public int slotCount = 3;
@@ -70,16 +68,6 @@ public class BlockSpawner : MonoBehaviour
         GameObject go = GetFromPool(prefab);
         go.transform.SetParent(spawnParent, false);
         go.SetActive(true);
-
-        // var rt = go.GetComponent<RectTransform>();
-        // if (localPositions != null && slotIndex < localPositions.Length)
-        // {
-        //     rt.anchoredPosition = localPositions[slotIndex];
-        // }
-        // else
-        // {
-        //     rt.anchoredPosition = new Vector2(slotIndex * (cellSize * 3f + gap), 0f);
-        // }
 
         var drag = go.GetComponent<BlockDrag>();
         if (drag != null)
