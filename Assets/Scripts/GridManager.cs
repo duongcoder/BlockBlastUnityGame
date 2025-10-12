@@ -37,6 +37,19 @@ public class GridManager : MonoBehaviour
         }
     }
 
+    public float GetBoardBottomLocal(RectTransform parent)
+    {
+        if (boardRect == null) boardRect = GetComponent<RectTransform>();
+
+        Vector3[] corners = new Vector3[4];
+        boardRect.GetWorldCorners(corners);
+        float worldBottom = corners[0].y;
+
+        Vector3 localBottom = parent.InverseTransformPoint(corners[0]);
+        float distanceFromBottom = localBottom.y - parent.rect.yMin;
+        return distanceFromBottom;      
+    }
+
     void GenerateGrid()
     {
         if (cells != null)

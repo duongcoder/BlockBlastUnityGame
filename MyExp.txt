@@ -52,5 +52,7 @@
 		-> Dùng Sprite Image, bỏ các Cells con trong Block Prefab, thay đổi BlockRenderer để Render ra Sprite Image UI.
 	* Bug: Grid co dãn theo tỉ lệ màn hình -> mất độ vuông của ô
 		-> Dùng cùng một cellSize cho cả Width và Height.
+	* Bug: BlocksTray không thay đổi theo tỉ lệ & không bám sát vào phía dưới GameBoard.
+		-> Trong GridManager ta tính khoảng cách từ mép dưới Canvas → mép dưới BoardGame. Sau đó ResizeTray lại phần BlocksTray theo khoảng cách đó.
 
  
