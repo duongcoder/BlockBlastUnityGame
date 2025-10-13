@@ -139,8 +139,10 @@ public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 
         gridLogic?.CheckAndClearLines();
 
+        // Gọi callback báo đã đặt xong
         onPlaced?.Invoke();
-        enabled = false;
+
+        // Khi spawn lại sẽ SetActive(true)
         gameObject.SetActive(false);
     }
 }

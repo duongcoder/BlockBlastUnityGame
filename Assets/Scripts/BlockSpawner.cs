@@ -66,12 +66,19 @@ public class BlockSpawner : MonoBehaviour
 
         GameObject prefab = blockPrefabs[Random.Range(0, blockPrefabs.Length)];
         GameObject go = GetFromPool(prefab);
+
+        // Đặt vào đúng parent (tray)
         go.transform.SetParent(spawnParent, false);
         go.SetActive(true);
 
+        // Đảm bảo block nằm trên cùng để nhận raycast
+        go.transform.SetAsLastSibling();
+
+        // Reset và gán lại tham chiếu cho BlockDrag
         var drag = go.GetComponent<BlockDrag>();
         if (drag != null)
         {
+            drag.enabled = true;
             drag.gridManager = gridManager;
             drag.gridLogic = gridLogic;
             drag.onPlaced = null;
@@ -83,12 +90,14 @@ public class BlockSpawner : MonoBehaviour
             }
         }
 
+        // Render lại block
         var renderer = go.GetComponentInChildren<BlockRenderer>();
         if (renderer != null && drag != null && drag.definition != null)
         {
             renderer.Render(drag.definition, cellSize);
         }
 
+        // Lưu vào danh sách active
         activeBlocks[slotIndex] = go;
         instanceToPrefab[go] = prefab;
     }
