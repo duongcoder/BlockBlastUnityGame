@@ -62,4 +62,9 @@
 	BlockRenderer (để render theo rotation)
 	BlockDrag (để lưu rotation và dùng khi PlaceBlock)
 	BlockSpawner (để random rotation khi spawn)
+
+	* Bug: 1 số block sau khi xoay sẽ bị resize khác đi (cụ thể là bị co nhỏ hơn)
+		-> Xoay bằng RectTransform.localRotation để hiển thị đúng hướng.
+		-> Tắt preserveAspect để sprite fill đúng sizeDelta.
+		-> Không dùng GetWidth/GetHeight(rotationSteps) nữa, chỉ lấy kích thước gốc. Không cần tính lại width/height sau xoay
  

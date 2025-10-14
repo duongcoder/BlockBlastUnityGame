@@ -69,7 +69,7 @@ MonoBehaviour:
       m_Calls: []
   m_Sprite: {fileID: -1107448613, guid: b28a9436c42a9f54fa2e7ff52e8e4a8b, type: 3}
   m_Type: 0
-  m_PreserveAspect: 1
+  m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
@@ -93,6 +93,7 @@ MonoBehaviour:
   gridManager: {fileID: 0}
   gridLogic: {fileID: 0}
   rendererComp: {fileID: 0}
+  rotationSteps: 0
 --- !u!114 &6587576461688207247
 MonoBehaviour:
   m_ObjectHideFlags: 0

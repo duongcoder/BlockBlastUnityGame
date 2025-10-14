@@ -27,7 +27,7 @@ public class BlockRenderer : MonoBehaviour
         {
             image.sprite = spriteToUse;
             image.enabled = true;
-            image.preserveAspect = true;
+            image.preserveAspect = false;
         }
         else
         {
@@ -35,22 +35,8 @@ public class BlockRenderer : MonoBehaviour
             return;
         }
 
-        // Lấy cell sau khi xoay
-        List<Vector2Int> rotatedCells = definition.GetRotatedCells(rotationSteps);
-
-        int minX = int.MaxValue, maxX = int.MinValue;
-        int minY = int.MaxValue, maxY = int.MinValue;
-
-        foreach (var c in rotatedCells)
-        {
-            if (c.x < minX) minX = c.x;
-            if (c.x > maxX) maxX = c.x;
-            if (c.y < minY) minY = c.y;
-            if (c.y > maxY) maxY = c.y;
-        }
-
-        int width = (maxX - minX + 1);
-        int height = (maxY - minY + 1);
+        int width = definition.GetWidth(0);
+        int height = definition.GetHeight(0);
 
         float totalW = width * cellSize * sizeMultiplier;
         float totalH = height * cellSize * sizeMultiplier;
