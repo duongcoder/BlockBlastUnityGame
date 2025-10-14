@@ -9,6 +9,7 @@ public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
     public GridLogic gridLogic;
     public BlockRenderer rendererComp;
     public System.Action onPlaced;
+    [HideInInspector] public int rotationSteps;
 
     private Vector3 startPos;
     private Transform startParent;
@@ -49,7 +50,7 @@ public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
     {
         if (gridManager == null || definition == null || rendererComp == null) return;
         float cellSize = gridManager.GetCellSize();
-        rendererComp.Render(definition, cellSize);
+        rendererComp.Render(definition, cellSize, rotationSteps);
     }
 
     public void OnBeginDrag(PointerEventData eventData)
@@ -115,7 +116,7 @@ public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 
     private bool CanPlaceBlock(int baseX, int baseY)
     {
-        foreach (var cell in definition.shapeCells)
+        foreach (var cell in definition.GetRotatedCells(rotationSteps))
         {
             int x = baseX + cell.x;
             int y = baseY + cell.y;
@@ -130,7 +131,7 @@ public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 
     private void PlaceBlock(int baseX, int baseY)
     {
-        foreach (var cell in definition.shapeCells)
+        foreach (var cell in definition.GetRotatedCells(rotationSteps))
         {
             int x = baseX + cell.x;
             int y = baseY + cell.y;

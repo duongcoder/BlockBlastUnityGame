@@ -56,4 +56,10 @@
 		-> Trong GridManager ta tính khoảng cách từ mép dưới Canvas → mép dưới BoardGame. Sau đó ResizeTray lại phần BlocksTray theo khoảng cách đó.
 	* Bug: Blocks bị disable khi mà click/drag (sau 3-4 lần thì bị đơ)
 		-> Trong hàm BlockDrag.PlaceBlock() bỏ enabled = false chỉ set SetActive(true). Trong BlockSpawner.SpawnOneAtSlot(), ta SetAsLastSibling.
+
+10. Xoay Block (0, 90, 180, 270 độ) - cả logic và hiển thị.
+	Xoay dữ liệu shapeCells trước khi render
+	BlockRenderer (để render theo rotation)
+	BlockDrag (để lưu rotation và dùng khi PlaceBlock)
+	BlockSpawner (để random rotation khi spawn)
  

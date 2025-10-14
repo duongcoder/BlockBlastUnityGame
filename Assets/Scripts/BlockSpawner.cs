@@ -82,6 +82,7 @@ public class BlockSpawner : MonoBehaviour
             drag.gridManager = gridManager;
             drag.gridLogic = gridLogic;
             drag.onPlaced = null;
+            drag.rotationSteps = Random.Range(0, 4);
 
             if (respawnOnPlaced)
             {
@@ -94,7 +95,7 @@ public class BlockSpawner : MonoBehaviour
         var renderer = go.GetComponentInChildren<BlockRenderer>();
         if (renderer != null && drag != null && drag.definition != null)
         {
-            renderer.Render(drag.definition, cellSize);
+            renderer.Render(drag.definition, cellSize, drag.rotationSteps);
         }
 
         // Lưu vào danh sách active
@@ -169,7 +170,7 @@ public class BlockSpawner : MonoBehaviour
             var renderer = child.GetComponentInChildren<BlockRenderer>();
             if (drag != null && renderer != null && drag.definition != null)
             {
-                renderer.Render(drag.definition, cellSize);
+                renderer.Render(drag.definition, cellSize, drag.rotationSteps);
             }
         }
     }
