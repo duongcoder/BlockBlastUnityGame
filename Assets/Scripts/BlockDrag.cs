@@ -11,14 +11,15 @@ public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
     public System.Action onPlaced;
     [HideInInspector] public int rotationSteps;
 
-    private Vector3 startPos;
+    private Vector3 startWorldPos;
+    private Vector3 startLocalPos;
     private Transform startParent;
     private RectTransform rectTransform;
 
     private void Awake()
     {
         rectTransform = GetComponent<RectTransform>();
-        if (rendererComp == null) rendererComp = GetComponentInChildren<BlockRenderer>();
+        if (rendererComp == null) rendererComp = GetComponent<BlockRenderer>();
     }
 
     private void OnEnable()
@@ -55,11 +56,14 @@ public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        startPos = rectTransform.position;
+        if (gridManager == null) return;
+
+        startWorldPos = rectTransform.position;
+        startLocalPos = rectTransform.localPosition;
         startParent = transform.parent;
 
         Canvas rootCanvas = gridManager.GetComponentInParent<Canvas>();
-        if (rootCanvas)
+        if (rootCanvas != null)
         {
             transform.SetParent(rootCanvas.transform, true);
         }
@@ -69,12 +73,15 @@ public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 
     public void OnDrag(PointerEventData eventData)
     {
+        if (gridManager == null) return;
+
         var canvas = gridManager.GetComponentInParent<Canvas>();
+        if (canvas == null) return;
+
         var canvasRect = canvas.transform as RectTransform;
         Camera cam = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
 
-        Vector2 localPoint;
-        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, eventData.position, cam, out localPoint))
+        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, eventData.position, cam, out var localPoint))
         {
             rectTransform.localPosition = localPoint;
         }
@@ -82,41 +89,60 @@ public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 
     public void OnEndDrag(PointerEventData eventData)
     {
+        if (gridManager == null) return;
+
         RectTransform board = gridManager.GetBoardRect();
         var canvas = gridManager.GetComponentInParent<Canvas>();
+        if (canvas == null) return;
+
         Camera cam = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
 
-        Vector2 localPoint;
-        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(board, eventData.position, cam, out localPoint))
+        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(board, eventData.position, cam, out var localPoint))
         {
             localPoint.x += board.rect.width * 0.5f;
             localPoint.y += board.rect.height * 0.5f;
 
-            float paddingX = board.rect.size.x * gridManager.paddingRatio.x;
-            float paddingY = board.rect.size.y * gridManager.paddingRatio.y;
-            float gridWidth = board.rect.size.x - 2 * paddingX;
-            float gridHeight = board.rect.size.y - 2 * paddingY;
+            float cellSize = gridManager.GetCellSize();
+            Vector2 offset = gridManager.GetGridOffset();
 
-            float cellW = gridWidth / gridManager.width;
-            float cellH = gridHeight / gridManager.height;
+            Vector2Int? bestBase = null;
+            float bestDist = float.MaxValue;
 
-            int baseX = Mathf.FloorToInt((localPoint.x - paddingX) / cellW);
-            int baseY = Mathf.FloorToInt((localPoint.y - paddingY) / cellH);
-
-            if (CanPlaceBlock(baseX, baseY))
+            foreach (var cell in definition.GetNormalizedCells(rotationSteps))
             {
-                PlaceBlock(baseX, baseY);
+                Vector2 cellPos = localPoint + (Vector2)cell * cellSize;
+
+                int gx = Mathf.RoundToInt((cellPos.x - offset.x) / cellSize);
+                int gy = Mathf.RoundToInt((cellPos.y - offset.y) / cellSize);
+
+                Vector2 snapped = new Vector2(offset.x + gx * cellSize, offset.y + gy * cellSize);
+                float dist = (snapped - cellPos).sqrMagnitude;
+
+                if (dist < bestDist)
+                {
+                    bestDist = dist;
+                    bestBase = new Vector2Int(gx - cell.x, gy - cell.y);
+                }
+            }
+
+            if (bestBase.HasValue && CanPlaceBlock(bestBase.Value.x, bestBase.Value.y))
+            {
+                PlaceBlock(bestBase.Value.x, bestBase.Value.y);
                 return;
             }
         }
 
-        rectTransform.position = startPos;
-        transform.SetParent(startParent, true);     
+        transform.SetParent(startParent, true);
+        rectTransform.position = startWorldPos;
+        rectTransform.localPosition = startLocalPos;
+        RenderBlock();
     }
 
     private bool CanPlaceBlock(int baseX, int baseY)
     {
-        foreach (var cell in definition.GetRotatedCells(rotationSteps))
+        if (definition == null || gridManager == null) return false;
+
+        foreach (var cell in definition.GetNormalizedCells(rotationSteps))
         {
             int x = baseX + cell.x;
             int y = baseY + cell.y;
@@ -131,14 +157,16 @@ public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 
     private void PlaceBlock(int baseX, int baseY)
     {
-        foreach (var cell in definition.GetRotatedCells(rotationSteps))
+        if (definition == null || gridLogic == null) return;
+
+        foreach (var cell in definition.GetNormalizedCells(rotationSteps))
         {
             int x = baseX + cell.x;
             int y = baseY + cell.y;
-            gridLogic?.OccupyCell(x, y, Color.magenta);
+            gridLogic.OccupyCell(x, y, Color.white);
         }
 
-        gridLogic?.CheckAndClearLines();
+        gridLogic.CheckAndClearLines();
 
         // Gọi callback báo đã đặt xong
         onPlaced?.Invoke();

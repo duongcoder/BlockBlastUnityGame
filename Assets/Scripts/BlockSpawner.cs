@@ -12,9 +12,33 @@ public class BlockSpawner : MonoBehaviour
     public bool respawnOnPlaced = true;
     public int slotCount = 3;
 
-    private Dictionary<GameObject, Queue<GameObject>> poolDict = new Dictionary<GameObject, Queue<GameObject>>();
-    private Dictionary<GameObject, GameObject> instanceToPrefab = new Dictionary<GameObject, GameObject>();
+    private Dictionary<GameObject, Queue<GameObject>> poolDict;
     private GameObject[] activeBlocks;
+    private readonly List<GameObject> pendingReturns = new List<GameObject>();
+
+    private void Awake()
+    {
+        poolDict = new Dictionary<GameObject, Queue<GameObject>>();
+        activeBlocks = new GameObject[slotCount];
+
+        if (blockPrefabs == null || blockPrefabs.Length == 0)
+        {
+            Debug.LogWarning("[BlockSpawner] blockPrefabs chưa được gán trong Inspector.");
+            blockPrefabs = new GameObject[0];
+        }
+
+        foreach (var prefab in blockPrefabs)
+        {
+            if (prefab == null)
+            {
+                Debug.LogWarning("[BlockSpawner] Có prefab bị Missing trong blockPrefabs.");
+                continue;
+            }
+            
+            if (!poolDict.ContainsKey(prefab))
+                poolDict[prefab] = new Queue<GameObject>();
+        }
+    }
 
     private void OnEnable()
     {
@@ -26,15 +50,6 @@ public class BlockSpawner : MonoBehaviour
     {
         if (refreshOnGridResize && gridManager != null)
             gridManager.OnGridResized -= RefreshAll;
-    }
-
-    private void Awake()
-    {
-        activeBlocks = new GameObject[slotCount];
-        foreach (var prefab in blockPrefabs)
-        {
-            poolDict[prefab] = new Queue<GameObject>();
-        }
     }
 
     private void Start()
@@ -52,29 +67,30 @@ public class BlockSpawner : MonoBehaviour
     {
         ClearTray();
 
-        float cellSize = gridManager.GetCellSize();
+        if (gridManager == null || spawnParent == null) return;
 
+        float cellSize = gridManager.GetCellSize();
         for (int i = 0; i < slotCount; i++)
-        {
             SpawnOneAtSlot(i, cellSize);
-        }
     }
 
     private void SpawnOneAtSlot(int slotIndex, float cellSize)
     {
-        if (blockPrefabs.Length == 0) return;
+        if (blockPrefabs == null || blockPrefabs.Length == 0) return;
 
         GameObject prefab = blockPrefabs[Random.Range(0, blockPrefabs.Length)];
+        if (prefab == null) return;
+
         GameObject go = GetFromPool(prefab);
 
-        // Đặt vào đúng parent (tray)
+        var tag = go.GetComponent<BlockInstance>();
+        if (tag == null) tag = go.AddComponent<BlockInstance>();
+        tag.prefabRef = prefab;
+
         go.transform.SetParent(spawnParent, false);
         go.SetActive(true);
-
-        // Đảm bảo block nằm trên cùng để nhận raycast
         go.transform.SetAsLastSibling();
 
-        // Reset và gán lại tham chiếu cho BlockDrag
         var drag = go.GetComponent<BlockDrag>();
         if (drag != null)
         {
@@ -90,17 +106,23 @@ public class BlockSpawner : MonoBehaviour
                 drag.onPlaced += () => OnBlockPlaced(capturedIndex, go);
             }
         }
+        else
+        {
+            Debug.LogWarning("[BlockSpawner] Prefab thiếu BlockDrag.");
+        }
 
-        // Render lại block
-        var renderer = go.GetComponentInChildren<BlockRenderer>();
+        // Render block
+        var renderer = go.GetComponent<BlockRenderer>();
         if (renderer != null && drag != null && drag.definition != null)
         {
             renderer.Render(drag.definition, cellSize, drag.rotationSteps);
         }
+        else
+        {
+            Debug.LogWarning("[BlockSpawner] Prefab missing BlockRenderer component or BlockDefinition.");
+        }
 
-        // Lưu vào danh sách active
         activeBlocks[slotIndex] = go;
-        instanceToPrefab[go] = prefab;
     }
 
     private void OnBlockPlaced(int slotIndex, GameObject instance)
@@ -112,33 +134,59 @@ public class BlockSpawner : MonoBehaviour
     {
         yield return null;
 
-        if (instance != null && instanceToPrefab.TryGetValue(instance, out var prefab))
-        {
-            ReturnToPool(prefab, instance);
-            instanceToPrefab.Remove(instance);
-        }
+        if (instance != null)
+            pendingReturns.Add(instance);
 
-        float cellSize = gridManager.GetCellSize();
+        float cellSize = (gridManager != null) ? gridManager.GetCellSize() : 0f;
         SpawnOneAtSlot(slotIndex, cellSize);
+    }
+
+    private void LateUpdate()
+    {
+        if (pendingReturns.Count == 0) return;
+
+        foreach (var inst in pendingReturns)
+        {
+            if (inst == null) continue;
+
+            var tag = inst.GetComponent<BlockInstance>();
+            if (tag != null && tag.prefabRef != null)
+                ReturnToPool(tag.prefabRef, inst);
+            else
+                inst.SetActive(false);
+        }
+        pendingReturns.Clear();
     }
 
     private GameObject GetFromPool(GameObject prefab)
     {
+        if (!poolDict.ContainsKey(prefab))
+            poolDict[prefab] = new Queue<GameObject>();
+
         if (poolDict[prefab].Count > 0)
         {
             return poolDict[prefab].Dequeue();
         }
         else
         {
-            return Instantiate(prefab);
+            var inst = Instantiate(prefab);
+            var tag = inst.GetComponent<BlockInstance>();
+            if (tag == null) tag = inst.AddComponent<BlockInstance>();
+            tag.prefabRef = prefab;
+            return inst;
         }
     }
 
     private void ReturnToPool(GameObject prefab, GameObject instance)
     {
-        if (instance == null) return;
+        if (instance == null || prefab == null) return;
+
         instance.SetActive(false);
         instance.transform.SetParent(transform, false);
+
+        if (!poolDict.ContainsKey(prefab))
+            poolDict[prefab] = new Queue<GameObject>();
+            
         poolDict[prefab].Enqueue(instance);
     }
 
@@ -146,32 +194,31 @@ public class BlockSpawner : MonoBehaviour
     {
         for (int i = 0; i < activeBlocks.Length; i++)
         {
-            if (activeBlocks[i] != null)
-            {
-                var inst = activeBlocks[i];
-                if (instanceToPrefab.TryGetValue(inst, out var prefab))
-                {
-                    ReturnToPool(prefab, inst);
-                    instanceToPrefab.Remove(inst);
-                }
-                activeBlocks[i] = null;
-            }
+            var inst = activeBlocks[i];
+            if (inst == null) continue;
+
+            var tag = inst.GetComponent<BlockInstance>();
+            if (tag != null && tag.prefabRef != null)
+                ReturnToPool(tag.prefabRef, inst);
+            else
+                inst.SetActive(false);
+
+            activeBlocks[i] = null;
         }
     }
 
     private void RefreshAll()
     {
-        float cellSize = gridManager.GetCellSize();
+        if (gridManager == null || spawnParent == null) return;
 
+        float cellSize = gridManager.GetCellSize();
         for (int i = 0; i < spawnParent.childCount; i++)
         {
             var child = spawnParent.GetChild(i);
             var drag = child.GetComponent<BlockDrag>();
-            var renderer = child.GetComponentInChildren<BlockRenderer>();
+            var renderer = child.GetComponent<BlockRenderer>();
             if (drag != null && renderer != null && drag.definition != null)
-            {
                 renderer.Render(drag.definition, cellSize, drag.rotationSteps);
-            }
         }
     }
 }

@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-
 public class GridLogic : MonoBehaviour
 {
     public GridManager gridManager;

@@ -1,68 +1,145 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 using System.Collections.Generic;
 
-[RequireComponent(typeof(Image))]
+
 public class BlockRenderer : MonoBehaviour
 {
-    public Sprite blockSprite;
+    public GameObject cellPrefab;
     public float sizeMultiplier = 1f;
 
-    private Image image;
-    private RectTransform rectTransform;
+    private readonly List<GameObject> cellPool = new List<GameObject>();
+    private bool renderScheduled = false;
+    private BlockDefinition pendingDefinition;
+    private float pendingCellSize;
+    private int pendingRotationSteps;
+    private Color? pendingOverrideColor;
 
-    private void Awake()
+    public void Render(BlockDefinition definition, float cellSize, int rotationSteps = 0, Color? overrideColor = null)
     {
-        image = GetComponent<Image>();
-        rectTransform = GetComponent<RectTransform>();
-    }
+        if (definition == null || cellPrefab == null) return;
 
-    public void Render(BlockDefinition definition, float cellSize, int rotationSteps = 0)
-    {
-        if (image == null || definition == null) return;
-
-        Sprite spriteToUse = definition.sprite != null ? definition.sprite : blockSprite;
-
-        if (spriteToUse != null)
+        if (IsRebuildingUI())
         {
-            image.sprite = spriteToUse;
-            image.enabled = true;
-            image.preserveAspect = false;
-        }
-        else
-        {
-            image.enabled = false;
+            ScheduleRender(definition, cellSize, rotationSteps, overrideColor);
             return;
         }
 
-        int width = definition.GetWidth(0);
-        int height = definition.GetHeight(0);
-
-        float totalW = width * cellSize * sizeMultiplier;
-        float totalH = height * cellSize * sizeMultiplier;
-        rectTransform.sizeDelta = new Vector2(totalW, totalH);
-
-        rectTransform.localRotation = Quaternion.Euler(0, 0, rotationSteps * 90);
+        ApplyRender(definition, cellSize, rotationSteps, overrideColor);
     }
 
-    // Xoay cell theo rotationSteps
-    private List<Vector2Int> GetRotatedCells(IEnumerable<Vector2Int> originalCells, int steps)
+    private void ApplyRender(BlockDefinition definition, float cellSize, int rotationSteps, Color? overrideColor)
     {
-        var rotated = new List<Vector2Int>();
-        steps = ((steps % 4) + 4) % 4; // đảm bảo 0..3
+        var cells = definition.GetNormalizedCells(rotationSteps);
 
-        foreach (var cell in originalCells)
+        int width = definition.GetWidth(rotationSteps);
+        int height = definition.GetHeight(rotationSteps);
+        var rtSelf = GetComponent<RectTransform>();
+        if (rtSelf != null)
         {
-            Vector2Int newCell;
-            switch (steps)
-            {
-                case 1: newCell = new Vector2Int(-cell.y, cell.x); break;   // 90°
-                case 2: newCell = new Vector2Int(-cell.x, -cell.y); break;  // 180°
-                case 3: newCell = new Vector2Int(cell.y, -cell.x); break;   // 270°
-                default: newCell = cell; break;                             // 0°
-            }
-            rotated.Add(newCell);
+            float totalW = width * cellSize * sizeMultiplier;
+            float totalH = height * cellSize * sizeMultiplier;
+            rtSelf.sizeDelta = new Vector2(totalW, totalH);
         }
-        return rotated;
+
+        while (cellPool.Count < cells.Count)
+        {
+            var newCell = Instantiate(cellPrefab, transform);
+            newCell.SetActive(false);
+
+            var rt = newCell.GetComponent<RectTransform>();
+            if (rt != null)
+            {
+                rt.anchorMin = Vector2.zero;
+                rt.anchorMax = Vector2.zero;
+                rt.pivot = new Vector2(0.5f, 0.5f);
+            }
+
+            var img = newCell.GetComponent<Image>();
+            if (img != null) img.raycastTarget = false;
+
+            cellPool.Add(newCell);
+        }
+
+        // Hiển thị và sắp xếp cell
+        for (int i = 0; i < cells.Count; i++)
+        {
+            var go = cellPool[i];
+            go.SetActive(true);
+
+            var rt = go.GetComponent<RectTransform>();
+            if (rt != null)
+            {
+                float x = (cells[i].x + 0.5f) * cellSize * sizeMultiplier;
+                float y = (cells[i].y + 0.5f) * cellSize * sizeMultiplier;
+                rt.anchoredPosition = new Vector2(x, y);
+                rt.sizeDelta = new Vector2(cellSize * sizeMultiplier, cellSize * sizeMultiplier);
+            }
+
+            var img = go.GetComponent<Image>();
+            if (img != null)
+            {
+                img.sprite = definition.sprite;
+                img.color = overrideColor.HasValue ? overrideColor.Value : definition.blockColor;
+            }
+        }
+
+        // Ẩn các cell thừa
+        for (int i = cells.Count; i < cellPool.Count; i++)
+        {
+            cellPool[i].SetActive(false);
+        }
+    }
+
+    private bool IsRebuildingUI()
+    {
+#if UNITY_EDITOR || UNITY_UGUI
+        try
+        {
+            return UnityEngine.UI.CanvasUpdateRegistry.IsRebuildingLayout() || UnityEngine.UI.CanvasUpdateRegistry.IsRebuildingGraphics();
+        }
+        catch
+        {
+            return false;
+        }
+#else
+        return false;
+#endif
+    }
+
+    private void ScheduleRender(BlockDefinition definition, float cellSize, int rotationSteps, Color? overrideColor)
+    {
+        pendingDefinition = definition;
+        pendingCellSize = cellSize;
+        pendingRotationSteps = rotationSteps;
+        pendingOverrideColor = overrideColor;
+
+        if (!renderScheduled)
+        {
+            renderScheduled = true;
+            StartCoroutine(DeferredRender());
+        }
+    }
+
+    private IEnumerator DeferredRender()
+    {
+        yield return new WaitForEndOfFrame();
+        renderScheduled = false;
+
+        if (pendingDefinition != null)
+        {
+            ApplyRender(pendingDefinition, pendingCellSize, pendingRotationSteps, pendingOverrideColor);
+            pendingDefinition = null;
+        }
+    }
+
+    public void Clear()
+    {
+        foreach (var cell in cellPool)
+        {
+            if (cell != null)
+                cell.SetActive(false);
+        }
     }
 }

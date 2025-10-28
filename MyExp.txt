@@ -68,3 +68,6 @@
 		-> Tắt preserveAspect để sprite fill đúng sizeDelta.
 		-> Không dùng GetWidth/GetHeight(rotationSteps) nữa, chỉ lấy kích thước gốc. Không cần tính lại width/height sau xoay
  
+ 11. Đổi cách render sprites blocks từ nguyên khối -> các ô ghép lại.
+	Definition lại Blocks từ sprite nguyên khối -> các ô ghép lại.
+	Chỉnh sửa để Sprite Image UI của Blocks khớp và Color hợp lý.
