@@ -108,9 +108,12 @@ public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
             Vector2Int? bestBase = null;
             float bestDist = float.MaxValue;
 
+            Vector2Int blockSize = definition.GetBounds(rotationSteps);
+            Vector2 halfBlockSize = new Vector2(blockSize.x * cellSize * 0.5f, blockSize.y * cellSize * 0.5f);
+
             foreach (var cell in definition.GetNormalizedCells(rotationSteps))
             {
-                Vector2 cellPos = localPoint + (Vector2)cell * cellSize;
+                Vector2 cellPos = localPoint - halfBlockSize + (Vector2)cell * cellSize;
 
                 int gx = Mathf.RoundToInt((cellPos.x - offset.x) / cellSize);
                 int gy = Mathf.RoundToInt((cellPos.y - offset.y) / cellSize);

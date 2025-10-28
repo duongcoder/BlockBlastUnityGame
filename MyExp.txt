@@ -68,6 +68,10 @@
 		-> Tắt preserveAspect để sprite fill đúng sizeDelta.
 		-> Không dùng GetWidth/GetHeight(rotationSteps) nữa, chỉ lấy kích thước gốc. Không cần tính lại width/height sau xoay
  
- 11. Đổi cách render sprites blocks từ nguyên khối -> các ô ghép lại.
+11. Đổi cách render sprites blocks từ nguyên khối -> các ô ghép lại.
 	Definition lại Blocks từ sprite nguyên khối -> các ô ghép lại.
 	Chỉnh sửa để Sprite Image UI của Blocks khớp và Color hợp lý.
+
+12. Các Blocks khi snap vào Grid thì bị nhận ô (0,0) làm gốc để snap -> ảnh hưởng trải nghiệm UI
+	Fix lỗi nhận cell (0,0) làm gốc -> Nhận theo trỏ chuột
+	Tính toán lại cellPos để blocks snap chính xác vào grid.

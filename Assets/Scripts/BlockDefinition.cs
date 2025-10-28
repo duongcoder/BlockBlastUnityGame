@@ -90,4 +90,23 @@ public class BlockDefinition : ScriptableObject
         }
         return true;
     }
+
+    public Vector2Int GetBounds(int rotationSteps)
+    {
+        int minX = int.MaxValue, maxX = int.MinValue;
+        int minY = int.MaxValue, maxY = int.MinValue;
+
+        foreach (var c in GetNormalizedCells(rotationSteps))
+        {
+            if (c.x < minX) minX = c.x;
+            if (c.x > maxX) maxX = c.x;
+            if (c.y < minY) minY = c.y;
+            if (c.y > maxY) maxY = c.y;
+        }
+
+        int width = maxX - minX + 1;
+        int height = maxY - minY + 1;
+
+        return new Vector2Int(width, height);
+    }
 }
