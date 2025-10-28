@@ -75,3 +75,8 @@
 12. Các Blocks khi snap vào Grid thì bị nhận ô (0,0) làm gốc để snap -> ảnh hưởng trải nghiệm UI
 	Fix lỗi nhận cell (0,0) làm gốc -> Nhận theo trỏ chuột
 	Tính toán lại cellPos để blocks snap chính xác vào grid.
+
+13. Làm Panel Score và HighScore
+	Tạo Panel chứa Text UI hiển thị Score và HighScore
+	Chỉnh sửa lại logic tính score & dùng PlayerPrefs để lưu HighScore
+	Update Score và HighScore nếu có thay đổi.

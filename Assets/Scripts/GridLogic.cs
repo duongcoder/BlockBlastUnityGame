@@ -8,6 +8,7 @@ public class GridLogic : MonoBehaviour
 
     private bool[,] occupied;
     private int score = 0;
+    [SerializeField] private int pointsPerLine = 100;
 
     void Awake()
     {
@@ -64,13 +65,15 @@ public class GridLogic : MonoBehaviour
         List<int> fullRows = GetFullRows();
         List<int> fullCols = GetFullCols();
 
+        int clearedLines = 0;
+
         foreach (int y in fullRows)
         {
             for (int x = 0; x < gridManager.width; x++)
             {
                 ClearCell(x, y);
             }
-            score += 100;
+            clearedLines++;
         }
 
         foreach (int x in fullCols)
@@ -79,14 +82,25 @@ public class GridLogic : MonoBehaviour
             {
                 ClearCell(x, y);
             }
-            score += 100;
+            clearedLines++;
         }
 
-        if (fullRows.Count > 0 || fullCols.Count > 0)
+        if (clearedLines > 0)
         {
-            Debug.Log("Score: " + score);
-            OnScoreChanged?.Invoke(score);
+            AddScore(clearedLines * pointsPerLine);
         }
+    }
+
+    private void AddScore(int amount)
+    {
+        score += amount;
+        Debug.Log("Score: " + score);
+        OnScoreChanged?.Invoke(score);
+    }
+
+    public int GetScore()
+    {
+        return score;
     }
 
     private List<int> GetFullRows()

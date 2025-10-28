@@ -222,4 +222,16 @@ public class GridManager : MonoBehaviour
     {
         return GetBoardBottom(parent);
     }
+
+    public float GetBoardTopLocal(RectTransform parent)
+    {
+        if (boardRect == null) boardRect = GetComponent<RectTransform>();
+
+        Vector3[] corners = new Vector3[4];
+        boardRect.GetWorldCorners(corners);
+
+        Vector3 localTop = parent.InverseTransformPoint(corners[1]);
+
+        return parent.rect.yMax - localTop.y;
+    }
 }
