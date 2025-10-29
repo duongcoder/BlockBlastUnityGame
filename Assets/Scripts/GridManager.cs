@@ -17,6 +17,7 @@ public class GridManager : MonoBehaviour
     private RectTransform boardRect;
     private readonly List<GameObject> gridLines = new List<GameObject>();
     private readonly List<GameObject> gridBorder = new List<GameObject>();
+    private float cellScale = 0.8f;
 
     void Start()
     {
@@ -175,7 +176,8 @@ public class GridManager : MonoBehaviour
 
         int pixelSize = Mathf.FloorToInt(Mathf.Min(cellWidth, cellHeight));
 
-        return Mathf.Max(1, pixelSize);
+        // return Mathf.Max(1, pixelSize);
+        return Mathf.Max(1, Mathf.FloorToInt(pixelSize * cellScale));
     }
 
     private void GetOffsets(float cellSize, out float offsetX, out float offsetY)
