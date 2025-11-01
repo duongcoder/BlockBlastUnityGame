@@ -35,6 +35,7 @@ public class GameOverPopupUI : MonoBehaviour
     {
         int finalScore = gridLogic != null ? gridLogic.GetScore() : 0;
         Show(finalScore);
+        MusicManager.StopMusic();
     }
 
     public void Show(int score)
@@ -48,6 +49,7 @@ public class GameOverPopupUI : MonoBehaviour
     
     private void RestartGame()
     {
+        MusicManager.PlayMusic();
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 }
