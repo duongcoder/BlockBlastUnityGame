@@ -87,3 +87,6 @@
 
 15. Thêm Nhạc nền cho Game
 	Nhạc nền sẽ phát khi đang chơi, dừng lại khi GameOver và phát lại từ đầu khi bấm chơi lại.
+
+16. Thêm logic hiển thị UI Text Combo 
+	Add thêm hiệu ứng khi xóa 1 hàng/cột liên tiếp thì hiển thị Combo xN!

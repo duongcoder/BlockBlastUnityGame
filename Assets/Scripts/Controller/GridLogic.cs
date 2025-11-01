@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 
 public struct BlockInfo
@@ -16,12 +17,17 @@ public struct BlockInfo
 public class GridLogic : MonoBehaviour
 {
     public System.Action<int> OnScoreChanged;
+    public System.Action<int, int> OnLinesCleared;
     public System.Action OnGameOver;
 
     [SerializeField] private GridManager gridManager;
     [SerializeField] private int pointsPerLine = 100;
+    [SerializeField] private Color flashColor = new Color(1f, 1f, 0.2f, 0.9f);
+    [SerializeField] private float flashDuration = 0.2f;
+    [SerializeField] private Color emptyColor = new Color(1, 1, 1, 0.1f);
     private bool[,] occupied;
     private int score = 0;
+    private int comboCount = 0;
 
     void Awake()
     {
@@ -46,6 +52,7 @@ public class GridLogic : MonoBehaviour
             }
         }
         score = 0;
+        comboCount = 0;
         OnScoreChanged?.Invoke(score);
     }
 
@@ -63,7 +70,7 @@ public class GridLogic : MonoBehaviour
         if (InBounds(x, y))
         {
             occupied[x, y] = false;
-            gridManager.HighlightCell(x, y, new Color(1, 1, 1, 0.1f));
+            gridManager.HighlightCell(x, y, emptyColor);
         }
     }
 
@@ -78,34 +85,64 @@ public class GridLogic : MonoBehaviour
         List<int> fullRows = GetFullRows();
         List<int> fullCols = GetFullCols();
 
-        int clearedLines = 0;
+        int cleared = 0;
 
         foreach (int y in fullRows)
         {
-            for (int x = 0; x < gridManager.width; x++)
-            {
-                ClearCell(x, y);
-            }
-            clearedLines++;
+            StartCoroutine(FlashRow(y));
+            cleared++;
         }
 
         foreach (int x in fullCols)
         {
-            for (int y = 0; y < gridManager.height; y++)
-            {
-                ClearCell(x, y);
-            }
-            clearedLines++;
+            StartCoroutine(FlashCol(x));
+            cleared++;
         }
 
-        if (clearedLines > 0)
+        if (cleared > 0)
         {
-            AddScore(clearedLines * pointsPerLine);
+            comboCount++;
+            int points = cleared * pointsPerLine * comboCount;
+            AddScore(points);
+
+            Debug.Log($"[GridLogic] Cleared {cleared} lines/cols, combo x{comboCount}, + {points} điểm");
+            OnLinesCleared?.Invoke(cleared, comboCount);
         }
+        else
+        {
+            comboCount = 0;
+        }
+    }
+
+    private IEnumerator FlashRow(int y)
+    {
+        if (gridManager == null) yield break;
+
+        for (int x = 0; x < gridManager.width; x++)
+            gridManager.HighlightCell(x, y, flashColor);
+
+        yield return new WaitForSeconds(flashDuration);
+
+        for (int x = 0; x < gridManager.width; x++)
+            ClearCell(x, y);
+    }
+
+    private IEnumerator FlashCol(int x)
+    {
+        if (gridManager == null) yield break;
+
+        for (int y = 0; y < gridManager.height; y++)
+            gridManager.HighlightCell(x, y, flashColor);
+
+        yield return new WaitForSeconds(flashDuration);
+
+        for (int y = 0; y < gridManager.height; y++)
+            ClearCell(x, y);
     }
 
     private void AddScore(int amount)
     {
+        if (amount <= 0) return;
         score += amount;
         OnScoreChanged?.Invoke(score);
     }
@@ -117,7 +154,7 @@ public class GridLogic : MonoBehaviour
 
     private List<int> GetFullRows()
     {
-        List<int> fullRows = new List<int>();
+        var fullRows = new List<int>();
         for (int y = 0; y < gridManager.height; y++)
         {
             bool full = true;
@@ -132,7 +169,7 @@ public class GridLogic : MonoBehaviour
 
     private List<int> GetFullCols()
     {
-        List<int> fullCols = new List<int>();
+        var fullCols = new List<int>();
         for (int x = 0; x < gridManager.width; x++)
         {
             bool full = true;
@@ -152,15 +189,10 @@ public class GridLogic : MonoBehaviour
 
     public void CheckGameOver(List<BlockInfo> trayBlocks)
     {
-        Debug.Log("[GridLogic] CheckGameOver called");
         if (!CanPlaceAnyBlock(trayBlocks))
         {
             Debug.Log("[GridLogic] No block can be placed → GAME OVER");
             OnGameOver?.Invoke();
-        }
-        else
-        {
-            Debug.Log("[GridLogic] Still at least one block can be placed");
         }
     }
 
@@ -168,9 +200,8 @@ public class GridLogic : MonoBehaviour
     {
         foreach (var info in trayBlocks)
         {
-            bool can = (info.def != null && CanPlaceBlock(info.def, info.rotationSteps));
-            Debug.Log($"[GridLogic] Can place {info.def?.name} rot={info.rotationSteps}? {can}");
-            if (can) return true;
+            if (info.def != null && CanPlaceBlock(info.def, info.rotationSteps))
+                return true;
         }
         return false;
     }
@@ -185,10 +216,7 @@ public class GridLogic : MonoBehaviour
             for (int y = 0; y <= maxY; y++)
             {
                 if (CanPlaceAt(def, x, y, rotationSteps))
-                {
-                    Debug.Log($"[GridLogic] {def.name} rot={rotationSteps} CAN place at ({x},{y})");
                     return true;
-                }
             }
         }
         return false;
@@ -204,7 +232,6 @@ public class GridLogic : MonoBehaviour
             if (!InBounds(gridX, gridY)) return false;
             if (occupied[gridX, gridY]) return false;
         }
-        Debug.Log($"[GridLogic] {def.name} rot={rotationSteps} CAN place at ({startX},{startY})");
         return true;
     }
 }
