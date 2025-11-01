@@ -80,3 +80,10 @@
 	Tạo Panel chứa Text UI hiển thị Score và HighScore
 	Chỉnh sửa lại logic tính score & dùng PlayerPrefs để lưu HighScore
 	Update Score và HighScore nếu có thay đổi.
+
+14. Tạo Popup GameOver cho game
+	Logic: Nếu không thể ghép Block nào ở trong Tray vào Grid nữa thì GameOver, Bấm Button để chơi lại.
+	Hiển thị cả Score mà người chơi đạt được.
+
+15. Thêm Nhạc nền cho Game
+	Nhạc nền sẽ phát khi đang chơi, dừng lại khi GameOver và phát lại từ đầu khi bấm chơi lại.
